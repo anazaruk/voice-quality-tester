@@ -1,0 +1,43 @@
+# Exact private source snapshots - NEVER commit
+private/
+
+# Runtime secrets
+.env
+*.env.local
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Media / captures
+*.wav
+*.mp3
+*.pcap
+*.pcapng
+recordings/
+pcaps/
+logs/
+*.log
+
+# Databases / caches
+*.db
+*.sqlite
+*.sqlite3
+.cache/
+models-cache/
+huggingface/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Runtime/model output
+results/
+
+# Editors
+.DS_Store
+*.swp

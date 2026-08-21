@@ -1,0 +1,41 @@
+Export time UTC: 2026-08-21T15:30:18+00:00
+Source hostname: Asterisk-NISQA
+Source private IP: 146.190.221.201
+Source public IP: 146.190.221.201
+
+ Static hostname: Asterisk-NISQA
+       Icon name: computer-vm
+         Chassis: vm 🖴
+      Machine ID: 083a5d0d8abbd2ab48eb5dfa6a319ac2
+         Boot ID: 1b26fe2f1c054a34af728302f5df201e
+  Virtualization: kvm
+Operating System: Ubuntu 24.04.3 LTS
+          Kernel: Linux 6.8.0-124-generic
+    Architecture: x86-64
+ Hardware Vendor: DigitalOcean
+  Hardware Model: Droplet
+Firmware Version: 20171212
+   Firmware Date: Tue 2017-12-12
+    Firmware Age: 8y 8month 1w 2d
+
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.3 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+
+Linux Asterisk-NISQA 6.8.0-124-generic #124-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 13:00:45 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+
+Asterisk 20.20.0
+Python 3.12.3
+mysql  Ver 8.0.46-0ubuntu0.24.04.3 for Linux on x86_64 ((Ubuntu))
+Version 13.0.2 (commit: 3fcdbc5a, branch: release-13.0.2)
+nginx version: nginx/1.24.0 (Ubuntu)

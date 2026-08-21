@@ -1,0 +1,1 @@
+Skipping historical table data: nisqa_cdr

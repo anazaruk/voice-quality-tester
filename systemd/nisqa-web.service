@@ -1,0 +1,13 @@
+[Unit]
+Description=NISQA Dialer Web
+
+[Service]
+User=root
+WorkingDirectory=/usr/local/bin
+ExecStart=/usr/src/NISQA/venv/bin/python3 /usr/local/bin/nisqa_targets_web.py
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

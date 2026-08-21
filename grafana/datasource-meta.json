@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "uid": "afpeyrrlvbx8ge",
+    "name": "mysql",
+    "type": "mysql",
+    "url": "127.0.0.1:3306",
+    "database": "",
+    "user": "nisqa",
+    "access": "proxy",
+    "is_default": 1,
+    "json_data": {
+      "connMaxLifetime": 14400,
+      "database": "voice_quality",
+      "maxIdleConns": 100,
+      "maxIdleConnsAuto": true,
+      "maxOpenConns": 100,
+      "pdcInjected": false
+    }
+  },
+  {
+    "id": 2,
+    "uid": "bfpl5incund34b",
+    "name": "prometheus",
+    "type": "prometheus",
+    "url": "http://localhost:9090",
+    "database": "",
+    "user": "",
+    "access": "proxy",
+    "is_default": 0,
+    "json_data": {
+      "pdcInjected": false
+    }
+  }
+]

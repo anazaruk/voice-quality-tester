@@ -1,0 +1,6 @@
+# NISQA dialer
+* * * * * root /usr/src/NISQA/venv/bin/python /usr/local/bin/nisqa_dialer.py >> /var/log/nisqa_dialer.log 2>&1
+
+# Archive / PCAP maintenance
+0 * * * * root /usr/local/bin/archive_nisqa.sh
+0 * * * * root /usr/local/sbin/rotate_voip_pcaps.sh

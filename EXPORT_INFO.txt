@@ -1,0 +1,6 @@
+Package format: 3
+Exported UTC: 2026-08-21T15:30:21+00:00
+Source host: Asterisk-NISQA
+Source Asterisk: Asterisk 20.20.0
+Source private IP: 146.190.221.201
+Source public IP: 146.190.221.201

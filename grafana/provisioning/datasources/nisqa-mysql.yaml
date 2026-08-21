@@ -1,0 +1,15 @@
+apiVersion: 1
+datasources:
+  - name: mysql
+    uid: afpeyrrlvbx8ge
+    type: mysql
+    access: proxy
+    url: 127.0.0.1:3306
+    user: nisqa
+    jsonData:
+      database: voice_quality
+      maxOpenConns: 25
+      maxIdleConns: 25
+      connMaxLifetime: 14400
+    isDefault: true
+    editable: true
