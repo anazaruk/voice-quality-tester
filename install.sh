@@ -74,7 +74,9 @@ apt-get install -y \
   ca-certificates \
   gnupg \
   sqlite3 \
-  tcpdump
+  tcpdump \
+  prometheus \
+  prometheus-node-exporter
 
 echo "== Installing Grafana =="
 if ! command -v grafana-server >/dev/null 2>&1; then
@@ -180,6 +182,10 @@ if [[ -d "$BASE/asterisk/sounds-custom/en-custom" ]]; then
   rsync -a "$BASE/asterisk/sounds-custom/en-custom/" /var/lib/asterisk/sounds/en/custom/
 fi
 
+if [[ -z "${MYSQL_PASSWORD:-}" ]]; then
+    MYSQL_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
+fi
+
 echo "== Configuring MySQL =="
 systemctl enable --now mysql
 
@@ -188,16 +194,16 @@ CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost'
-  IDENTIFIED BY '';
+  IDENTIFIED BY '${MYSQL_PASSWORD}';
 
 ALTER USER '${MYSQL_USER}'@'localhost'
-  IDENTIFIED BY '';
+  IDENTIFIED BY '${MYSQL_PASSWORD}';
 
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'127.0.0.1'
-  IDENTIFIED BY '';
+  IDENTIFIED BY '${MYSQL_PASSWORD}';
 
 ALTER USER '${MYSQL_USER}'@'127.0.0.1'
-  IDENTIFIED BY '';
+  IDENTIFIED BY '${MYSQL_PASSWORD}';
 
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'localhost';
 GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'127.0.0.1';
@@ -232,61 +238,91 @@ fi
 
 nginx -t
 
+echo "== Configuring Prometheus =="
+
+cat > /etc/prometheus/prometheus.yml <<'EOF'
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - 127.0.0.1:9090
+
+  - job_name: node
+    static_configs:
+      - targets:
+          - 127.0.0.1:9100
+EOF
+
+systemctl enable prometheus
+systemctl enable prometheus-node-exporter
+systemctl restart prometheus-node-exporter
+systemctl restart prometheus
+
 echo "== Installing Grafana dashboards and datasource =="
-install -d -o grafana -g grafana /var/lib/grafana/dashboards/nisqa
-if compgen -G "$BASE/grafana/dashboards/*.json" >/dev/null; then
-  cp "$BASE"/grafana/dashboards/*.json /var/lib/grafana/dashboards/nisqa/
-fi
-chown -R grafana:grafana /var/lib/grafana/dashboards
 
-install -d /etc/grafana/provisioning/dashboards
-install -d /etc/grafana/provisioning/datasources
+install -d -m 0755 /etc/grafana/provisioning/dashboards
+install -d -m 0755 /etc/grafana/provisioning/datasources
+install -d -o grafana -g grafana -m 0755 /var/lib/grafana/dashboards/nisqa
 
-cp "$BASE/grafana/provisioning/dashboards/nisqa.yaml" \
+# Dashboard provisioning configuration.
+install -m 0644 \
+  "$BASE/grafana/provisioning/dashboards/nisqa.yaml" \
   /etc/grafana/provisioning/dashboards/nisqa.yaml
 
-# Rebuild datasource file with actual install-time DB credentials.
-python3 - "$BASE" "$MYSQL_USER" "$MYSQL_PASSWORD" "$MYSQL_DATABASE" <<'PY'
-import json, os, sys
-base, user, password, database = sys.argv[1:5]
-meta = os.path.join(base, "grafana", "datasource-meta.json")
-out = "/etc/grafana/provisioning/datasources/nisqa-mysql.yaml"
+# Install all version-controlled dashboards.
+if compgen -G "$BASE/grafana/dashboards/*.json" >/dev/null; then
+  cp "$BASE"/grafana/dashboards/*.json \
+    /var/lib/grafana/dashboards/nisqa/
 
-records=[]
-try:
-    with open(meta) as f:
-        records=json.load(f)
-except Exception:
-    pass
+  chown grafana:grafana \
+    /var/lib/grafana/dashboards/nisqa/*.json
 
-ds=next((r for r in records if str(r.get("type","")).lower()=="mysql"), {})
-name=ds.get("name") or "Voice Quality MySQL"
-uid=ds.get("uid") or "voice-quality-mysql"
+  chmod 0644 \
+    /var/lib/grafana/dashboards/nisqa/*.json
+else
+  echo "ERROR: No Grafana dashboards found in $BASE/grafana/dashboards"
+  exit 1
+fi
 
-password_block = ""
-if password:
-    password_block = f"""    secureJsonData:
-      password: {password}
-"""
+# Build datasource using this installation's MySQL credentials.
+cat > /etc/grafana/provisioning/datasources/nisqa-mysql.yaml <<EOF
+apiVersion: 1
 
-with open(out,"w") as f:
-    f.write(f"""apiVersion: 1
 datasources:
-  - name: {name}
-    uid: {uid}
+  - name: Voice Quality MySQL
+    uid: voice-quality-mysql
     type: mysql
     access: proxy
     url: 127.0.0.1:3306
-    user: {user}
-{password_block}    jsonData:
-      database: {database}
+    user: ${MYSQL_USER}
+    secureJsonData:
+      password: "${MYSQL_PASSWORD}"
+    jsonData:
+      database: ${MYSQL_DATABASE}
       maxOpenConns: 25
       maxIdleConns: 25
       connMaxLifetime: 14400
     isDefault: true
     editable: true
-""")
-PY
+
+  - name: Prometheus
+    uid: voice-quality-prometheus
+    type: prometheus
+    access: proxy
+    url: http://127.0.0.1:9090
+    isDefault: false
+    editable: true
+EOF
+
+chown root:grafana \
+  /etc/grafana/provisioning/datasources/nisqa-mysql.yaml
+
+chmod 0640 \
+  /etc/grafana/provisioning/datasources/nisqa-mysql.yaml
+
 
 echo "== Setting Grafana default admin credentials =="
 # Set defaults for first-start path.
@@ -330,6 +366,21 @@ ASTERISK_LOCALNET=${ASTERISK_LOCALNET}
 EOF
 chmod 0600 /etc/voice-quality.env
 
+echo "== Installing nginx Voice Quality site =="
+
+install -m 0644 \
+  "$BASE/nginx/sites-available/nisqa-web" \
+  /etc/nginx/sites-available/nisqa-web
+
+rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/sites-enabled/voice-quality
+
+ln -sfn \
+  /etc/nginx/sites-available/nisqa-web \
+  /etc/nginx/sites-enabled/nisqa-web
+
+nginx -t
+
 echo "== Starting services =="
 systemctl daemon-reload
 systemctl enable asterisk nginx
@@ -344,6 +395,26 @@ if [[ -f /etc/systemd/system/nisqa-web.service ]]; then
     echo "  journalctl -u nisqa-web -n 100"
   }
 fi
+
+echo "== Verifying installed application =="
+
+mysql \
+  -h127.0.0.1 \
+  -u"${MYSQL_USER}" \
+  -p"${MYSQL_PASSWORD}" \
+  "${MYSQL_DATABASE}" \
+  -e "SELECT 1; SHOW TABLES;" >/dev/null
+
+curl -fsS http://127.0.0.1:8088/ >/dev/null
+curl -fsS http://127.0.0.1/dialer/ >/dev/null
+
+curl -fsS http://127.0.0.1:3000/api/health \
+  | grep -q '"database"[[:space:]]*:[[:space:]]*"ok"'
+
+curl -fsS http://127.0.0.1:9090/-/ready >/dev/null
+curl -fsS http://127.0.0.1:9100/metrics >/dev/null
+
+echo "Application verification: OK"
 
 echo "== Basic verification =="
 echo
@@ -368,7 +439,7 @@ echo
 echo "MySQL local application account:"
 echo "  Database: ${MYSQL_DATABASE}"
 echo "  User:     ${MYSQL_USER}"
-echo "  Password: <none>"
+echo "  Password: stored in /etc/voice-quality.env"
 echo
 echo "SIP authentication:"
 echo "  IP based; no SIP password is configured."

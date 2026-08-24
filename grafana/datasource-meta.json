@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "uid": "afpeyrrlvbx8ge",
+    "uid": "voice-quality-mysql",
     "name": "mysql",
     "type": "mysql",
     "url": "127.0.0.1:3306",
@@ -20,7 +20,7 @@
   },
   {
     "id": 2,
-    "uid": "bfpl5incund34b",
+    "uid": "voice-quality-prometheus",
     "name": "prometheus",
     "type": "prometheus",
     "url": "http://localhost:9090",

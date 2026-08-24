@@ -1,11 +1,12 @@
 apiVersion: 1
+
 providers:
-  - name: NISQA
+  - name: Voice Quality
     orgId: 1
-    folder: NISQA
+    folder: ""
     type: file
     disableDeletion: false
-    updateIntervalSeconds: 30
     allowUiUpdates: true
+    updateIntervalSeconds: 10
     options:
       path: /var/lib/grafana/dashboards/nisqa

@@ -3,11 +3,12 @@
 from flask import Flask, request, redirect
 import pymysql
 import html
+import os
 
-DB_HOST = "127.0.0.1"
-DB_USER = "nisqa"
-DB_PASS = "CHANGE_ME"
-DB_NAME = "voice_quality"
+DB_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
+DB_USER = os.getenv("MYSQL_USER", "nisqa")
+DB_PASS = os.getenv("MYSQL_PASSWORD", "")
+DB_NAME = os.getenv("MYSQL_DATABASE", "voice_quality")
 
 BASE_URL = "/dialer"
 

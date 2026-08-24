@@ -1,0 +1,2049 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "voice-quality-mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 23,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n    created_at AS time,\r\n    mos_pred,\r\n    noi_pred,\r\n    dis_pred,\r\n    col_pred,\r\n    loud_pred,\r\n    word_error_rate\r\nFROM nisqa_cdr\r\nWHERE status='OK'\r\nAND source_ip IN (${source_ip:sqlstring})\r\nAND source_number IN (${source_number:sqlstring})\r\nAND destination_number IN (${destination_number:sqlstring})\r\nORDER BY created_at;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "nisqa_cdr"
+        }
+      ],
+      "title": "Voice Quality",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "voice-quality-mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "billed_duration_sec",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI_discovered_duration_sec",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "custom.fillOpacity",
+                "value": 15
+              },
+              {
+                "id": "custom.gradientMode",
+                "value": "none"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "trailing_silence_sec",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 39
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_silence_sec",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 23,
+        "x": 0,
+        "y": 16
+      },
+      "id": 10,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n    created_at AS time,\r\n    trailing_silence_sec,\r\n    total_silence_sec,\r\n    speech_duration_sec as AI_discovered_duration_sec,\r\n    duration as billed_duration_sec\r\nFROM nisqa_cdr\r\nWHERE status='OK'\r\nAND source_ip IN (${source_ip:sqlstring})\r\nAND source_number IN (${source_number:sqlstring})\r\nAND destination_number IN (${destination_number:sqlstring})\r\nORDER BY created_at;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Silence Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "voice-quality-mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "recording_file",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "▶ Play Recording",
+                    "url": "http://146.190.221.201/recordings/${__value.raw}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.width",
+                "value": 447
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "transcript"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 788
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 196
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "source_ip_asn"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 109
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "duration"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 68
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MOS"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 73
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "NOI"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 76
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DIS"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DISCONTINUITY"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 124
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "LOUD"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 74
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WER"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 55
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "destination_number"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 147
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "codec"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 59
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "uniqueid"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 341
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Call_ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 425
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AI_discovered_duration_sec"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 205
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "call_duration"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "call_duration_sec"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 137
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "billed_call_duration_sec"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 172
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_silence_sec"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 136
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "billed_duration_sec"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 143
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 23,
+        "x": 0,
+        "y": 23
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "time"
+          }
+        ]
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n    created_at AS time,\r\n    source_ip,\r\n    source_number,\r\n    destination_number,\r\n    duration as billed_duration_sec,\r\n    speech_duration_sec as AI_discovered_duration_sec,\r\n    trailing_silence_sec,\r\n    total_silence_sec,\r\n    ROUND(mos_pred, 2) AS MOS,\r\n    ROUND(noi_pred, 2) AS NOI,\r\n    ROUND(dis_pred, 2) AS DIS,\r\n    ROUND(col_pred, 2) AS DISCONTINUITY,\r\n    ROUND(loud_pred, 2) AS LOUD,\r\n    ROUND(word_error_rate, 4) AS WER,\r\n    recording_file,\r\n    uniqueid AS Call_ID,\r\n    codec,\r\n    rtp_avg_rx_loss,\r\n    rtp_avg_tx_loss,\r\n    rtp_avg_rx_jitter,\r\n    rtp_avg_tx_jitter,\r\n    rtp_avg_rtt,\r\n    source_ip_country,\r\n    source_ip_asn,\r\n    source_ip_carrier,\r\n    source_state AS CALLERID_state,\r\n    source_region AS CALLERID_region,\r\n    destination_state AS Destination_number_state,\r\n    destination_region AS Destination_number_region,\r\n    transcript\r\nFROM nisqa_cdr\r\nWHERE $__timeFilter(created_at)\r\n  AND source_ip IN (${source_ip:sqlstring})\r\n  AND source_number IN (${source_number:sqlstring})\r\n  AND destination_number IN (${destination_number:sqlstring})\r\nORDER BY created_at DESC\r\nLIMIT 100;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "builder",
+          "format": "table",
+          "rawSql": "",
+          "refId": "B"
+        }
+      ],
+      "title": "CDR Details",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "voice-quality-mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 23,
+        "x": 0,
+        "y": 32
+      },
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n    source_ip,\r\n    ROUND(AVG(mos_pred),2) AS MOS,\r\n    ROUND(AVG(noi_pred),2) AS Noise,\r\n    ROUND(AVG(dis_pred),2) AS Discontinuity,\r\n    ROUND(AVG(col_pred),2) AS Coloration,\r\n    ROUND(AVG(loud_pred),2) AS Loudness\r\nFROM nisqa_cdr\r\nWHERE\r\n    $__timeFilter(created_at)\r\n    AND source_ip IN (${source_ip:sqlstring})\r\n    AND source_number IN (${source_number:sqlstring})\r\n    AND destination_number IN (${destination_number:sqlstring})\r\nGROUP BY source_ip\r\nORDER BY AVG(mos_pred) DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Average MOS by Source IP",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "voice-quality-mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rtp_avg_tx_loss"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rtp_avg_tx_jitter * 1000"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rtp_avg_rx_loss"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 23,
+        "x": 0,
+        "y": 38
+      },
+      "id": 8,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  UNIX_TIMESTAMP(created_at) AS time_sec,\r\n  rtp_avg_rx_loss,\r\n  rtp_avg_tx_loss, \r\n  rtp_avg_rx_jitter * 1000, \r\n  rtp_avg_tx_jitter * 1000  \r\nFROM nisqa_cdr\r\nWHERE $__timeFilter(created_at)\r\nORDER BY created_at;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Local RTP Loss / Jitter",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "voice-quality-mysql"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 23,
+        "x": 0,
+        "y": 46
+      },
+      "id": 9,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "dataset": "voice_quality",
+          "datasource": {
+            "type": "mysql",
+            "uid": "voice-quality-mysql"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  UNIX_TIMESTAMP(created_at) AS time_sec,\r\n  rtp_avg_rtt * 1000 AS rtt_ms\r\nFROM nisqa_cdr\r\nWHERE $__timeFilter(created_at)\r\nORDER BY created_at;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "RTP Latency - RTT (Round Trip Time)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "voice-quality-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TCP Retrans %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 23,
+        "x": 0,
+        "y": 52
+      },
+      "id": 7,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 *\r\nrate(node_netstat_Tcp_RetransSegs[1m]) /\r\nrate(node_netstat_Tcp_OutSegs[1m])",
+          "instant": false,
+          "legendFormat": "TCP Retrans %",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "TCP retransmissions %",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "voice-quality-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Swap Used %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RAM Used %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU User %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Running Processes"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IO Wait %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 23,
+        "x": 0,
+        "y": 60
+      },
+      "id": 3,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"user\"}[1m]))",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "CPU User %",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"steal\"}[1m]))",
+          "instant": false,
+          "legendFormat": "CPU Steal %",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"iowait\"}[1m]))",
+          "instant": false,
+          "legendFormat": "IO Wait %",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(node_load1) / count(node_cpu_seconds_total{mode=\"idle\"})",
+          "instant": false,
+          "legendFormat": "CPU Load %",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"system\"}[1m]))",
+          "instant": false,
+          "legendFormat": "CPU System %",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "instant": false,
+          "legendFormat": "RAM Used %",
+          "range": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)",
+          "instant": false,
+          "legendFormat": "Swap Used %",
+          "range": true,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "node_procs_running",
+          "instant": false,
+          "legendFormat": "Running Processes",
+          "range": true,
+          "refId": "F"
+        }
+      ],
+      "title": "System health",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "voice-quality-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "UDP In Errors"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SoftIRQ %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Receive drops:"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 23,
+        "x": 0,
+        "y": 70
+      },
+      "id": 5,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[1m])*8/1024/1024",
+          "instant": false,
+          "legendFormat": "RX Mbps",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[1m])*8/1024/1024",
+          "instant": false,
+          "legendFormat": "TX Mbps",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"softirq\"}[1m]))",
+          "instant": false,
+          "legendFormat": "Interrupts / Soft IRQ",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_netstat_Tcp_RetransSegs[1m])",
+          "instant": false,
+          "legendFormat": "TCP Retrans/s",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"softirq\"}[1m]))",
+          "instant": false,
+          "legendFormat": "SoftIRQ %",
+          "range": true,
+          "refId": "E"
+        }
+      ],
+      "title": "Network",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "voice-quality-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 23,
+        "x": 0,
+        "y": 81
+      },
+      "id": 4,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_disk_read_bytes_total[1m])/1024/1024",
+          "instant": false,
+          "legendFormat": "Disk Read MB/s",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_disk_written_bytes_total[1m])/1024/1024",
+          "instant": false,
+          "legendFormat": "Disk Write MB/s",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * rate(node_disk_io_time_seconds_total[1m])",
+          "instant": false,
+          "legendFormat": "Disk Busy %",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "expr": "",
+          "instant": false,
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Disk I/O",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "voice-quality-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 23,
+        "x": 0,
+        "y": 90
+      },
+      "id": 6,
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.0.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "voice-quality-prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_context_switches_total[1m])",
+          "instant": false,
+          "legendFormat": "Context Switches/s",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Context switches",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "1m",
+  "schemaVersion": 42,
+  "templating": {
+    "list": [
+      {
+        "allowCustomValue": true,
+        "current": {},
+        "datasource": {
+          "type": "mysql",
+          "uid": "voice-quality-mysql"
+        },
+        "definition": "SELECT DISTINCT source_ip\r\nFROM nisqa_cdr\r\nORDER BY source_ip;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "source_ip",
+        "multi": true,
+        "name": "source_ip",
+        "options": [],
+        "query": {
+          "dataset": "voice_quality",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT DISTINCT source_ip\r\nFROM nisqa_cdr\r\nORDER BY source_ip;",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT source_ip\r\nFROM nisqa_cdr\r\nORDER BY source_ip;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": true,
+        "current": {},
+        "datasource": {
+          "type": "mysql",
+          "uid": "voice-quality-mysql"
+        },
+        "definition": "SELECT DISTINCT source_number\r\nFROM nisqa_cdr\r\nORDER BY source_number;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "source_number",
+        "multi": true,
+        "name": "source_number",
+        "options": [],
+        "query": {
+          "dataset": "voice_quality",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT DISTINCT source_number\r\nFROM nisqa_cdr\r\nORDER BY source_number;",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT source_number\r\nFROM nisqa_cdr\r\nORDER BY source_number;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": true,
+        "current": {},
+        "datasource": {
+          "type": "mysql",
+          "uid": "voice-quality-mysql"
+        },
+        "definition": "SELECT DISTINCT destination_number\r\nFROM nisqa_cdr\r\nORDER BY destination_number;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "destination_number",
+        "multi": true,
+        "name": "destination_number",
+        "options": [],
+        "query": {
+          "dataset": "voice_quality",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT DISTINCT destination_number\r\nFROM nisqa_cdr\r\nORDER BY destination_number;",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT destination_number\r\nFROM nisqa_cdr\r\nORDER BY destination_number;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Voice Quality Test",
+  "uid": "ad2qsh5",
+  "version": 1
+}

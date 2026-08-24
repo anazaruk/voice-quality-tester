@@ -1,11 +1,13 @@
 [Unit]
 Description=NISQA Dialer Web
+After=network.target mysql.service
+Requires=mysql.service
 
 [Service]
 User=root
 WorkingDirectory=/usr/local/bin
+EnvironmentFile=/etc/voice-quality.env
 ExecStart=/usr/src/NISQA/venv/bin/python3 /usr/local/bin/nisqa_targets_web.py
-
 Restart=always
 RestartSec=5
 
