@@ -383,7 +383,7 @@
                   {
                     "targetBlank": true,
                     "title": "▶ Play Recording",
-                    "url": "http://146.190.221.201/recordings/${__value.raw}"
+                    "url": "http://VOICE_QUALITY_HOST/recordings/${__value.raw}"
                   }
                 ]
               },

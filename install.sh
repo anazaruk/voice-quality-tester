@@ -305,6 +305,10 @@ if compgen -G "$BASE/grafana/dashboards/*.json" >/dev/null; then
   cp "$BASE"/grafana/dashboards/*.json /var/lib/grafana/dashboards/nisqa/
   chown grafana:grafana /var/lib/grafana/dashboards/nisqa/*.json
   chmod 0644 /var/lib/grafana/dashboards/nisqa/*.json
+
+  # Point recording links at this newly installed server.
+  sed -i "s/VOICE_QUALITY_HOST/${PUBLIC_IP}/g" \
+    /var/lib/grafana/dashboards/nisqa/*.json
 else
   echo "ERROR: No Grafana dashboards found in $BASE/grafana/dashboards"
   exit 1
