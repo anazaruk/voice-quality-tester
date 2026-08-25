@@ -19,6 +19,22 @@ fi
 # shellcheck disable=SC1091
 source "$BASE/config/defaults.env"
 
+: "${MYSQL_DATABASE:=voice_quality}"
+: "${MYSQL_USER:=nisqa}"
+: "${MYSQL_PASSWORD:=CHANGE_ME}"
+: "${GRAFANA_ADMIN_USER:=admin}"
+: "${GRAFANA_ADMIN_PASSWORD:=admin}"
+: "${MAXMIND_ACCOUNT_ID:=}"
+: "${MAXMIND_LICENSE_KEY:=}"
+: "${PUBLIC_IP:=}"
+: "${PRIVATE_IP:=}"
+: "${ASTERISK_LOCALNET:=10.0.0.0/8}"
+
+if [[ -z "$MYSQL_PASSWORD" ]]; then
+  echo "ERROR: MYSQL_PASSWORD must not be empty."
+  exit 1
+fi
+
 # Safety guard: this installer is intended for a NEW VM.
 EXISTING=0
 [[ -d /usr/src/NISQA/venv ]] && EXISTING=1
@@ -42,7 +58,7 @@ fi
 if [[ -r /etc/os-release ]]; then
   . /etc/os-release
   if [[ "${ID:-}" != "ubuntu" ]]; then
-    echo "ERROR: this installer currently targets Ubuntu 24.04."
+    echo "ERROR: this installer targets Ubuntu."
     exit 3
   fi
 fi
@@ -74,12 +90,14 @@ apt-get install -y \
   ca-certificates \
   gnupg \
   sqlite3 \
+  jq \
   tcpdump \
   prometheus \
-  prometheus-node-exporter
+  prometheus-node-exporter \
+  geoipupdate
 
 echo "== Installing Grafana =="
-if ! command -v grafana-server >/dev/null 2>&1; then
+if ! command -v grafana-server >/dev/null 2>&1 && ! command -v grafana >/dev/null 2>&1; then
   mkdir -p /etc/apt/keyrings
   rm -f /etc/apt/keyrings/grafana.gpg
   curl -fsSL https://apt.grafana.com/gpg.key \
@@ -93,10 +111,10 @@ if ! command -v grafana-server >/dev/null 2>&1; then
 fi
 
 echo "== Detecting target network addresses =="
-if [[ -z "${PRIVATE_IP:-}" ]]; then
+if [[ -z "$PRIVATE_IP" ]]; then
   PRIVATE_IP="$(hostname -I | awk '{print $1}')"
 fi
-if [[ -z "${PUBLIC_IP:-}" ]]; then
+if [[ -z "$PUBLIC_IP" ]]; then
   PUBLIC_IP="$(curl -4 -fsS --max-time 5 https://api.ipify.org 2>/dev/null || true)"
 fi
 [[ -n "$PUBLIC_IP" ]] || PUBLIC_IP="$PRIVATE_IP"
@@ -136,7 +154,33 @@ if [[ -f "$BASE/nisqa/requirements-current.txt" ]]; then
 elif [[ -f "$BASE/nisqa/requirements.txt" ]]; then
   /usr/src/NISQA/venv/bin/pip install -r "$BASE/nisqa/requirements.txt"
 else
-  echo "WARN: no requirements file found"
+  echo "ERROR: no NISQA requirements file found"
+  exit 1
+fi
+
+echo "== Installing GeoIP databases =="
+install -d -m 0755 /var/lib/GeoIP
+
+if [[ -s "$BASE/geoip/GeoLite2-City.mmdb" && -s "$BASE/geoip/GeoLite2-ASN.mmdb" ]]; then
+  install -m 0644 "$BASE/geoip/GeoLite2-City.mmdb" /var/lib/GeoIP/GeoLite2-City.mmdb
+  install -m 0644 "$BASE/geoip/GeoLite2-ASN.mmdb" /var/lib/GeoIP/GeoLite2-ASN.mmdb
+  [[ -s "$BASE/geoip/GeoLite2-Country.mmdb" ]] && \
+    install -m 0644 "$BASE/geoip/GeoLite2-Country.mmdb" /var/lib/GeoIP/GeoLite2-Country.mmdb
+elif [[ -n "$MAXMIND_ACCOUNT_ID" && -n "$MAXMIND_LICENSE_KEY" ]]; then
+  cat > /etc/GeoIP.conf <<GEOEOF
+AccountID $MAXMIND_ACCOUNT_ID
+LicenseKey $MAXMIND_LICENSE_KEY
+EditionIDs GeoLite2-City GeoLite2-ASN GeoLite2-Country
+DatabaseDirectory /var/lib/GeoIP
+GEOEOF
+  chmod 0600 /etc/GeoIP.conf
+  geoipupdate
+fi
+
+if [[ ! -s /var/lib/GeoIP/GeoLite2-City.mmdb || ! -s /var/lib/GeoIP/GeoLite2-ASN.mmdb ]]; then
+  echo "ERROR: GeoLite2-City.mmdb and GeoLite2-ASN.mmdb are required by app/nisqa.py."
+  echo "Place them in $BASE/geoip/ or configure MAXMIND_ACCOUNT_ID/MAXMIND_LICENSE_KEY."
+  exit 1
 fi
 
 echo "== Installing application scripts =="
@@ -159,6 +203,12 @@ if [[ -d "$BASE/asterisk/etc" ]]; then
   rsync -a "$BASE/asterisk/etc/" /etc/asterisk/
 fi
 
+# Ubuntu's sample asterisk.conf marks [directories] as a template with (!).
+# Activate the section so astagidir=/var/lib/asterisk/agi-bin is actually used.
+if [[ -f /etc/asterisk/asterisk.conf ]]; then
+  sed -i 's/^\[directories\](!)$/[directories]/' /etc/asterisk/asterisk.conf
+fi
+
 # Replace source server addresses with the target cloud addresses where possible.
 if [[ -n "${SOURCE_PUBLIC_IP:-}" && "$SOURCE_PUBLIC_IP" != "$PUBLIC_IP" ]]; then
   grep -RIl -- "$SOURCE_PUBLIC_IP" /etc/asterisk 2>/dev/null \
@@ -170,7 +220,6 @@ if [[ -n "${SOURCE_PRIVATE_IP:-}" && "$SOURCE_PRIVATE_IP" != "$PRIVATE_IP" ]]; t
 fi
 
 chown -R asterisk:asterisk /etc/asterisk
-
 install -d -o asterisk -g asterisk /var/spool/asterisk/monitor
 
 if [[ -d "$BASE/asterisk/sounds-custom/custom" ]]; then
@@ -182,10 +231,6 @@ if [[ -d "$BASE/asterisk/sounds-custom/en-custom" ]]; then
   rsync -a "$BASE/asterisk/sounds-custom/en-custom/" /var/lib/asterisk/sounds/en/custom/
 fi
 
-if [[ -z "${MYSQL_PASSWORD:-}" ]]; then
-    MYSQL_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
-fi
-
 echo "== Configuring MySQL =="
 systemctl enable --now mysql
 
@@ -195,13 +240,11 @@ CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`
 
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'localhost'
   IDENTIFIED BY '${MYSQL_PASSWORD}';
-
 ALTER USER '${MYSQL_USER}'@'localhost'
   IDENTIFIED BY '${MYSQL_PASSWORD}';
 
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'127.0.0.1'
   IDENTIFIED BY '${MYSQL_PASSWORD}';
-
 ALTER USER '${MYSQL_USER}'@'127.0.0.1'
   IDENTIFIED BY '${MYSQL_PASSWORD}';
 
@@ -222,77 +265,57 @@ if [[ -d "$BASE/nginx/sites-available" ]]; then
   rsync -a "$BASE/nginx/sites-available/" /etc/nginx/sites-available/
 fi
 
-# Re-create source enabled-site symlinks by basename.
-if [[ -d "$BASE/nginx/sites-enabled" ]]; then
-  rm -f /etc/nginx/sites-enabled/*
-  for item in "$BASE"/nginx/sites-enabled/*; do
-    [[ -e "$item" || -L "$item" ]] || continue
-    name="$(basename "$item")"
-    if [[ -f "/etc/nginx/sites-available/$name" ]]; then
-      ln -s "/etc/nginx/sites-available/$name" "/etc/nginx/sites-enabled/$name"
-    elif [[ -f "$item" ]]; then
-      cp "$item" "/etc/nginx/sites-enabled/$name"
-    fi
-  done
+rm -f /etc/nginx/sites-enabled/*
+if [[ -f /etc/nginx/sites-available/nisqa-web ]]; then
+  ln -sfn /etc/nginx/sites-available/nisqa-web /etc/nginx/sites-enabled/nisqa-web
 fi
-
 nginx -t
 
 echo "== Configuring Prometheus =="
-
-cat > /etc/prometheus/prometheus.yml <<'EOF'
+cat > /etc/prometheus/prometheus.yml <<'PROMEOF'
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: prometheus
+    scrape_interval: 5s
+    scrape_timeout: 5s
     static_configs:
-      - targets:
-          - 127.0.0.1:9090
+      - targets: ['localhost:9090']
 
   - job_name: node
     static_configs:
-      - targets:
-          - 127.0.0.1:9100
-EOF
+      - targets: ['localhost:9100']
+PROMEOF
 
-systemctl enable prometheus
-systemctl enable prometheus-node-exporter
-systemctl restart prometheus-node-exporter
-systemctl restart prometheus
+systemctl enable --now prometheus-node-exporter
+systemctl enable --now prometheus
 
-echo "== Installing Grafana dashboards and datasource =="
-
+echo "== Installing Grafana dashboards and datasources =="
 install -d -m 0755 /etc/grafana/provisioning/dashboards
 install -d -m 0755 /etc/grafana/provisioning/datasources
 install -d -o grafana -g grafana -m 0755 /var/lib/grafana/dashboards/nisqa
 
-# Dashboard provisioning configuration.
 install -m 0644 \
   "$BASE/grafana/provisioning/dashboards/nisqa.yaml" \
   /etc/grafana/provisioning/dashboards/nisqa.yaml
 
-# Install all version-controlled dashboards.
 if compgen -G "$BASE/grafana/dashboards/*.json" >/dev/null; then
-  cp "$BASE"/grafana/dashboards/*.json \
-    /var/lib/grafana/dashboards/nisqa/
-
-  chown grafana:grafana \
-    /var/lib/grafana/dashboards/nisqa/*.json
-
-  chmod 0644 \
-    /var/lib/grafana/dashboards/nisqa/*.json
+  cp "$BASE"/grafana/dashboards/*.json /var/lib/grafana/dashboards/nisqa/
+  chown grafana:grafana /var/lib/grafana/dashboards/nisqa/*.json
+  chmod 0644 /var/lib/grafana/dashboards/nisqa/*.json
 else
   echo "ERROR: No Grafana dashboards found in $BASE/grafana/dashboards"
   exit 1
 fi
 
-# Build datasource using this installation's MySQL credentials.
-cat > /etc/grafana/provisioning/datasources/nisqa-mysql.yaml <<EOF
+# These UIDs are intentionally stable and match the version-controlled dashboard.
+cat > /etc/grafana/provisioning/datasources/nisqa-mysql.yaml <<DSLEOF
 apiVersion: 1
 
 datasources:
-  - name: Voice Quality MySQL
+  - name: mysql
     uid: voice-quality-mysql
     type: mysql
     access: proxy
@@ -308,38 +331,31 @@ datasources:
     isDefault: true
     editable: true
 
-  - name: Prometheus
+  - name: prometheus
     uid: voice-quality-prometheus
     type: prometheus
     access: proxy
     url: http://127.0.0.1:9090
     isDefault: false
     editable: true
-EOF
+DSLEOF
+chown root:grafana /etc/grafana/provisioning/datasources/nisqa-mysql.yaml
+chmod 0640 /etc/grafana/provisioning/datasources/nisqa-mysql.yaml
 
-chown root:grafana \
-  /etc/grafana/provisioning/datasources/nisqa-mysql.yaml
-
-chmod 0640 \
-  /etc/grafana/provisioning/datasources/nisqa-mysql.yaml
-
-
-echo "== Setting Grafana default admin credentials =="
-# Set defaults for first-start path.
+echo "== Setting Grafana admin credentials =="
 if ! grep -q '^\[security\]' /etc/grafana/grafana.ini; then
-  cat >> /etc/grafana/grafana.ini <<EOF
+  cat >> /etc/grafana/grafana.ini <<GFEOF
 
 [security]
 admin_user = ${GRAFANA_ADMIN_USER}
 admin_password = ${GRAFANA_ADMIN_PASSWORD}
-EOF
+GFEOF
 fi
 
 systemctl enable grafana-server
 systemctl restart grafana-server
-sleep 3
+sleep 5
 
-# Also reset password on installations where Grafana initialized before config edit.
 if command -v grafana >/dev/null 2>&1; then
   grafana cli admin reset-admin-password "$GRAFANA_ADMIN_PASSWORD" >/dev/null 2>&1 || true
 elif command -v grafana-cli >/dev/null 2>&1; then
@@ -347,14 +363,7 @@ elif command -v grafana-cli >/dev/null 2>&1; then
 fi
 
 echo "== Installing systemd / cron =="
-if [[ -f "$BASE/systemd/nisqa-web.service" ]]; then
-  cp "$BASE/systemd/nisqa-web.service" /etc/systemd/system/nisqa-web.service
-fi
-
-cp "$BASE/cron/nisqa.cron" /etc/cron.d/nisqa
-chmod 0644 /etc/cron.d/nisqa
-
-cat > /etc/voice-quality.env <<EOF
+cat > /etc/voice-quality.env <<ENVEOF
 MYSQL_DATABASE=${MYSQL_DATABASE}
 MYSQL_USER=${MYSQL_USER}
 MYSQL_PASSWORD=${MYSQL_PASSWORD}
@@ -363,25 +372,17 @@ GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
 PUBLIC_IP=${PUBLIC_IP}
 PRIVATE_IP=${PRIVATE_IP}
 ASTERISK_LOCALNET=${ASTERISK_LOCALNET}
-EOF
+ENVEOF
 chmod 0600 /etc/voice-quality.env
 
-echo "== Installing nginx Voice Quality site =="
+if [[ -f "$BASE/systemd/nisqa-web.service" ]]; then
+  cp "$BASE/systemd/nisqa-web.service" /etc/systemd/system/nisqa-web.service
+fi
 
-install -m 0644 \
-  "$BASE/nginx/sites-available/nisqa-web" \
-  /etc/nginx/sites-available/nisqa-web
+cp "$BASE/cron/nisqa.cron" /etc/cron.d/nisqa
+chmod 0644 /etc/cron.d/nisqa
 
-rm -f /etc/nginx/sites-enabled/default
-rm -f /etc/nginx/sites-enabled/voice-quality
-
-ln -sfn \
-  /etc/nginx/sites-available/nisqa-web \
-  /etc/nginx/sites-enabled/nisqa-web
-
-nginx -t
-
-echo "== Starting services =="
+echo "== Starting application services =="
 systemctl daemon-reload
 systemctl enable asterisk nginx
 systemctl restart asterisk
@@ -389,11 +390,7 @@ systemctl restart nginx
 
 if [[ -f /etc/systemd/system/nisqa-web.service ]]; then
   systemctl enable nisqa-web
-  systemctl restart nisqa-web || {
-    echo "WARN: nisqa-web did not start. Check:"
-    echo "  systemctl status nisqa-web"
-    echo "  journalctl -u nisqa-web -n 100"
-  }
+  systemctl restart nisqa-web
 fi
 
 echo "== Verifying installed application =="
@@ -405,27 +402,45 @@ mysql \
   "${MYSQL_DATABASE}" \
   -e "SELECT 1; SHOW TABLES;" >/dev/null
 
-curl -fsS http://127.0.0.1:8088/ >/dev/null
-curl -fsS http://127.0.0.1/dialer/ >/dev/null
+# Give Flask a few seconds to bind after systemd starts it.
+WEB_OK=0
+for _ in $(seq 1 15); do
+  if curl -fsS --max-time 3 http://127.0.0.1:8088/ >/dev/null; then
+    WEB_OK=1
+    break
+  fi
+  sleep 1
+done
+[[ "$WEB_OK" -eq 1 ]] || { echo "ERROR: nisqa-web is not responding on 127.0.0.1:8088"; exit 1; }
 
+curl -fsS http://127.0.0.1/dialer/ >/dev/null
 curl -fsS http://127.0.0.1:3000/api/health \
   | grep -q '"database"[[:space:]]*:[[:space:]]*"ok"'
-
 curl -fsS http://127.0.0.1:9090/-/ready >/dev/null
 curl -fsS http://127.0.0.1:9100/metrics >/dev/null
 
+ASTERISK_AGI_DIR="$(asterisk -rx 'core show settings' 2>/dev/null | awk -F: '/AGI Scripts directory/ {sub(/^[[:space:]]+/,"",$2); print $2}')"
+if [[ "$ASTERISK_AGI_DIR" != "/var/lib/asterisk/agi-bin" ]]; then
+  echo "ERROR: Asterisk AGI directory is '$ASTERISK_AGI_DIR', expected /var/lib/asterisk/agi-bin"
+  exit 1
+fi
+
+for uid in voice-quality-mysql voice-quality-prometheus; do
+  found=0
+  for _ in $(seq 1 10); do
+    if sqlite3 /var/lib/grafana/grafana.db "SELECT uid FROM data_source WHERE uid='$uid';" 2>/dev/null | grep -qx "$uid"; then
+      found=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$found" -ne 1 ]]; then
+    echo "ERROR: Grafana datasource $uid was not provisioned"
+    exit 1
+  fi
+done
+
 echo "Application verification: OK"
-
-echo "== Basic verification =="
-echo
-asterisk -V || true
-systemctl --no-pager --full status asterisk | head -15 || true
-systemctl --no-pager --full status mysql | head -15 || true
-systemctl --no-pager --full status grafana-server | head -15 || true
-systemctl --no-pager --full status nginx | head -15 || true
-[[ -f /etc/systemd/system/nisqa-web.service ]] && \
-  systemctl --no-pager --full status nisqa-web | head -15 || true
-
 echo
 echo "======================================================================"
 echo " INSTALL COMPLETE"
@@ -436,16 +451,18 @@ echo "  URL:      http://${PUBLIC_IP}:3000"
 echo "  User:     ${GRAFANA_ADMIN_USER}"
 echo "  Password: ${GRAFANA_ADMIN_PASSWORD}"
 echo
+echo "Dialer UI:"
+echo "  URL:      http://${PUBLIC_IP}/dialer/"
+echo
 echo "MySQL local application account:"
 echo "  Database: ${MYSQL_DATABASE}"
 echo "  User:     ${MYSQL_USER}"
-echo "  Password: stored in /etc/voice-quality.env"
+echo "  Password: ${MYSQL_PASSWORD}"
 echo
 echo "SIP authentication:"
 echo "  IP based; no SIP password is configured."
 echo
 echo "IMPORTANT:"
 echo "  Allowlist this server's public IP with the SIP carrier before expecting PSTN tests to work."
-echo
-echo "Change all default passwords after validation."
+echo "  Run ./verify.sh for a complete local validation."
 echo "======================================================================"
