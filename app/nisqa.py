@@ -389,6 +389,26 @@ try:
     )
 
     with conn.cursor() as cur:
+
+        # Match incoming SIP source IP against our carrier reference table.
+        cur.execute("""
+            SELECT c.carrier_name
+            FROM nisqa_carrier_ips ci
+            JOIN nisqa_carriers c
+              ON c.id = ci.carrier_id
+            WHERE ci.ip_address = %s
+              AND ci.enabled = 1
+              AND c.enabled = 1
+            LIMIT 1
+        """, (source_ip,))
+
+        carrier_row = cur.fetchone()
+
+        if carrier_row:
+            matched_carrier = carrier_row[0]
+        else:
+            matched_carrier = "Unknown"
+
         cur.execute("""
             INSERT INTO nisqa_cdr
             (
@@ -432,7 +452,7 @@ try:
             source_ip,
             ip_meta["country"],
             ip_meta["asn"],
-            ip_meta["carrier"],
+            matched_carrier,
             source_number,
             src_meta["state"],
             src_meta["region"],
