@@ -24,6 +24,14 @@ server {
 
     location /recordings/ {
         alias /var/spool/asterisk/monitor/;
+
+        types {
+            audio/wav wav;
+        }
+
+        default_type audio/wav;
+        add_header Content-Disposition "inline";
+
         autoindex off;
     }
 }
