@@ -164,7 +164,11 @@ def index():
             <td>
                 <div class="actions">
                     <button class="btn-save" type="submit">Save</button>
-                    <a class="btn btn-delete" href="{BASE_URL}/delete/{r['id']}" onclick="return confirm('Delete target ID {r['id']}?')">Delete</a>
+                    <button class="btn-delete"
+                            type="submit"
+                            formaction="{BASE_URL}/delete/{r['id']}"
+                            formmethod="post"
+                            onclick="return confirm('Delete target ID {r['id']}?')">Delete</button>
                 </div>
             </td>
         </form>
@@ -227,7 +231,7 @@ def update(target_id):
     return redirect(f"{BASE_URL}/")
 
 
-@app.route("/delete/<int:target_id>")
+@app.route("/delete/<int:target_id>", methods=["POST"])
 def delete(target_id):
     conn = db()
     with conn.cursor() as cur:
